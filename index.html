@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Chemistry Flashcards</title>
+    <style>
+        /* Page styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f5f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 40px auto;
+            text-align: center;
+        }
+        #card {
+            background-color: #fff;
+            border: 1px solid #d1e3f0;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        #question {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #0d3b66;
+        }
+        #answer {
+            margin-top: 20px;
+            font-size: 1.2em;
+            display: none;
+            color: #1446a0;
+        }
+        .buttons {
+            margin-top: 30px;
+        }
+        button {
+            background-color: #0d3b66;
+            color: #fff;
+            border: none;
+            padding: 15px 25px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #092d4c;
+        }
+        #progress {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #666;
+        }
+        #progressBar {
+            width: 100%;
+            background-color: #d1e3f0;
+            border-radius: 13px;
+            overflow: hidden;
+            margin-top: 20px;
+            height: 20px;
+        }
+        #progressBarFill {
+            height: 100%;
+            width: 0%;
+            background-color: #0d3b66;
+            transition: width 0.5s;
+        }
+        #timer {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #333;
+        }
+        #result {
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+        #result img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+        }
+        #reviewButton {
+            display: none;
+        }
+        #timerToggle {
+            margin-top: 20px;
+            display: inline-block;
+        }
+        #timerToggle input {
+            margin-right: 5px;
+        }
+        /* Style for category selection */
+        #categorySelection {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        #categorySelection label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        #startButton {
+            margin-top: 20px;
+        }
+        /* Style for home button */
+        #homeButton {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #0d3b66;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        #homeButton:hover {
+            background-color: #092d4c;
+        }
+    </style>
+</head>
+<body>
+
+<button id="homeButton">Back to Start</button>
+
+<div class="container">
+    <h1>Interactive Chemistry Flashcards</h1>
+
+    <!-- Category Selection -->
+    <div id="categorySelection">
+        <h2>Select Categories:</h2>
+        <label><input type="checkbox" class="categoryCheckbox" value="Chemical Reactions" checked> Chemical Reactions</label>
+        <label><input type="checkbox" class="categoryCheckbox" value="Acids and Bases" checked> Acids and Bases</label>
+        <label><input type="checkbox" class="categoryCheckbox" value="Organic Chemistry" checked> Organic Chemistry</label>
+        <label><input type="checkbox" class="categoryCheckbox" value="Hydrocarbons" checked> Hydrocarbons</label>
+        <!-- Add more categories if needed -->
+        <button id="startButton">Start</button>
+    </div>
+
+    <!-- Timer and progress bar -->
+    <div id="timerToggle" style="display: none;">
+        <label>
+            <input type="checkbox" id="enableTimer"> Enable Timer
+        </label>
+    </div>
+    <div id="timer" style="display: none;">Time: 00:00</div>
+    <div id="progressBar" style="display: none;">
+        <div id="progressBarFill"></div>
+    </div>
+
+    <!-- Flashcard -->
+    <div id="card" style="display: none;">
+        <div id="question"></div>
+        <div id="answer"></div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="buttons">
+        <button id="prevButton" style="display: none;">Previous Question</button>
+        <button id="showAnswerButton" style="display: none;">Show Answer</button>
+        <button id="hideAnswerButton" style="display: none;">Hide Answer</button>
+        <button id="correctButton" style="display: none; background-color: #28a745;">Correct</button>
+        <button id="incorrectButton" style="display: none; background-color: #dc3545;">Incorrect</button>
+        <button id="nextButton" style="display: none;">Next Question</button>
+        <button id="restartButton" style="display: none;">Restart</button>
+        <button id="reviewButton" style="display: none;">Review Incorrect</button>
+    </div>
+    <div id="progress" style="display: none;"></div>
+    <div id="result"></div>
+</div>
+
+<script>
+    // Flashcards with categories
+    const allFlashcards = [
+        // Chemical Reactions
+        {
+            "Category": "Chemical Reactions",
+            "Question": "What is the reaction pattern for a nonmetal reacting with oxygen gas?",
+            "Answer": "Nonmetal + oxygen gas => nonmetal oxide"
+        },
+        {
+            "Category": "Chemical Reactions",
+            "Question": "What is the reaction pattern for a metal reacting with oxygen gas?",
+            "Answer": "Metal + oxygen gas => metal oxide"
+        },
+        {
+            "Category": "Chemical Reactions",
+            "Question": "What is the reaction pattern for a metal reacting with an acid?",
+            "Answer": "Metal + acid => salt + hydrogen gas"
+        },
+        {
+            "Category": "Chemical Reactions",
+            "Question": "What is the reaction pattern for a hydroxide reacting with an acid?",
+            "Answer": "Hydroxide + acid => salt + water"
+        },
+        {
+            "Category": "Chemical Reactions",
+            "Question": "What is the reaction pattern for a metal oxide reacting with water?",
+            "Answer": "Metal oxide + water => hydroxide"
+        },
+        {
+            "Category": "Chemical Reactions",
+            "Question": "What is the reaction pattern for a metal oxide reacting with a nonmetal oxide?",
+            "Answer": "Metal oxide + nonmetal oxide => ternary salt"
+        },
+        {
+            "Category": "Chemical Reactions",
+            "Question": "What is the reaction pattern for a nonmetal oxide reacting with water?",
+            "Answer": "Nonmetal oxide + water => oxoacid or ternary acid"
+        },
+        // Acids and Bases
+        {
+            "Category": "Acids and Bases",
+            "Question": "What is the Rule of Zero Charge in salts?",
+            "Answer": "The total positive charge and total negative charge of a salt will always be equal, as ionic compounds are always neutral."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "What element is present in all acids?",
+            "Answer": "All acids contain the element hydrogen (H)."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "What happens when acids are dissolved in water?",
+            "Answer": "They release H+ ions (protons), and the negative ion that remains is the acidic residue (A-)."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "What is a dative bond or coordinate covalent bond?",
+            "Answer": "It's an atomic bond in which one atom provides a complete electron pair."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "How can you determine the acidity of a solution?",
+            "Answer": "By using the pH scale, which ranges from 0-14."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "What pH values correspond to acidic, neutral, and alkaline solutions?",
+            "Answer": "pH less than 7: acidic; pH equal to 7: neutral; pH greater than 7: alkaline."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "What are indicators in chemistry?",
+            "Answer": "Dyes that change color according to the solution, allowing us to differentiate between acidic, alkaline, and neutral solutions."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "What happens when basic substances are dissolved in water?",
+            "Answer": "They release OH- ions, forming a positive metal ion."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "What are hydroxides and their properties?",
+            "Answer": "Hydroxides are strong electrolytes that form electrically conductive solutions when dissolved in water."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "What is the general formula for metal hydroxides?",
+            "Answer": "M(OH)n, where n is the charge of the metal ion."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "How does the charge of an acidic residue relate to the number of hydrogen atoms in an acid?",
+            "Answer": "The charge of an acidic residue An- equals the number of hydrogen atoms in an acid HnA."
+        },
+        // Salts
+        {
+            "Category": "Acids and Bases",
+            "Question": "What is the general formula of a salt?",
+            "Answer": "MnAm, where Mm+ is a positive metal ion (cation) and An- is a negative acidic residue ion (anion)."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "What is the difference between binary and ternary salts?",
+            "Answer": "Binary salts have a monoatomic acidic residue ion; ternary salts have a polyatomic ion or compound ion."
+        },
+        // Ammonium Compounds
+        {
+            "Category": "Acids and Bases",
+            "Question": "Why do ammonium salts conduct electricity even though they consist solely of nonmetals?",
+            "Answer": "Because they contain ions, specifically the ammonium ion (NH4+)."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "How is ammonia produced industrially?",
+            "Answer": "Through the Haber-Bosch process, combining nitrogen gas and hydrogen gas."
+        },
+        {
+            "Category": "Acids and Bases",
+            "Question": "What is the reaction pattern for forming ammonium salts?",
+            "Answer": "Ammonia + acid => ammonium salt; nNH3 + HnA => (NH4)nA"
+        },
+        // Organic Chemistry
+        {
+            "Category": "Organic Chemistry",
+            "Question": "What are inorganic substances?",
+            "Answer": "Substances originating from inanimate objects, made up of various elements."
+        },
+        {
+            "Category": "Organic Chemistry",
+            "Question": "What are organic substances?",
+            "Answer": "Substances that contain carbon and were once thought to be found only in living organisms."
+        },
+        {
+            "Category": "Organic Chemistry",
+            "Question": "What elements are always present in organic substances?",
+            "Answer": "Carbon, and usually hydrogen; modern chemistry often refers to carbon chemistry."
+        },
+        {
+            "Category": "Organic Chemistry",
+            "Question": "What are the exceptions to organic substances containing carbon?",
+            "Answer": "CO, CO2, CN-, HCN, H2CO3, all carbonates, CS2"
+        },
+        {
+            "Category": "Organic Chemistry",
+            "Question": "What forms can organic compounds take?",
+            "Answer": "Chains, branched chains, or rings of carbon with hydrogens attached."
+        },
+        {
+            "Category": "Organic Chemistry",
+            "Question": "What are the bonding possibilities of carbon (C)?",
+            "Answer": "1) Tetrahedral structure with 4 atoms, bond angles 109°; 2) Planar trigonal structure with 3 atoms, bond angles 120°; 3) Linear structure with 2 atoms, bond angles 180°"
+        },
+        // Hydrocarbons
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are hydrocarbons?",
+            "Answer": "Carbon compounds that contain only carbon (C) and hydrogen (H) atoms."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are saturated hydrocarbons?",
+            "Answer": "Hydrocarbons with only single bonds."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are unsaturated hydrocarbons?",
+            "Answer": "Hydrocarbons with double and/or triple bonds."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are acyclic hydrocarbons?",
+            "Answer": "Hydrocarbons with an open chain structure."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are cyclic hydrocarbons?",
+            "Answer": "Hydrocarbons with a ring structure."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are aliphatic hydrocarbons?",
+            "Answer": "Hydrocarbons that contain carbon chains but not a benzene ring."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are aromatic hydrocarbons?",
+            "Answer": "Hydrocarbons that contain a benzene ring."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are organic oxygen compounds?",
+            "Answer": "Organic compounds that contain only carbon (C), oxygen (O), and hydrogen (H)."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What is a functional group in organic chemistry?",
+            "Answer": "An atom or group of atoms that defines the structure and chemical properties of a compound."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are isomers?",
+            "Answer": "Molecules with the same molecular formula but different structural formulas and properties."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What is a homologous series?",
+            "Answer": "A substance class characterized by its common functional group."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "List the stems used in organic chemistry for naming.",
+            "Answer": "Meth-, Eth-, Prop-, But-, Pent-, Hex-, Hept-, Oct-, Non-, Dec-"
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are alkanes and their general formula?",
+            "Answer": "Saturated hydrocarbons with single bonds; general formula: CnH2n+2"
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "How are alkanes named?",
+            "Answer": "By using the stem corresponding to the number of carbons and adding 'ane' (e.g., methane, ethane)."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What is structural chain isomerism?",
+            "Answer": "Isomers that differ in the chain structure or length of the carbon chain."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are alkenes and their general formula?",
+            "Answer": "Unsaturated hydrocarbons with at least one double bond; general formula: CnH2n"
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "How are alkenes named?",
+            "Answer": "By using the stem, the position of the double bond, and adding 'ene' (e.g., prop-1-ene)."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are special branches containing the double bond called?",
+            "Answer": "Methylidene, ethylidene, ethenyl"
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What is structural position isomerism?",
+            "Answer": "Isomers that differ only in the position of the functional group."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are alkynes and their general formula?",
+            "Answer": "Unsaturated hydrocarbons with at least one triple bond; general formula: CnH2n-2"
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "How are alkynes named?",
+            "Answer": "By using the stem, the position of the triple bond, and adding 'yne' (e.g., but-1-yne)."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are alcohols in organic chemistry?",
+            "Answer": "Organic oxygen compounds characterized by one or more hydroxyl groups (-OH)."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "How are alcohols named?",
+            "Answer": "By using the stem, adding 'an', the position of the hydroxyl group, and 'ol' (e.g., propan-1-ol)."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What are carboxylic acids?",
+            "Answer": "Organic oxygen compounds characterized by the presence of one or more carboxyl groups (-COOH)."
+        },
+        {
+            "Category": "Hydrocarbons",
+            "Question": "What is the general formula for carboxylic acids?",
+            "Answer": "CnH2n+1COOH or R-COOH, where R is an alkyl group."
+        }
+        // Add more flashcards as needed
+    ];
+
+    let selectedFlashcards = [];
+    let currentIndex = 0;
+    let incorrectCards = [];
+    let reviewingIncorrect = false;
+    let timerEnabled = false;
+    let timerInterval;
+    let startTime;
+
+    // Function to shuffle the flashcards
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    // Start button
+    document.getElementById('startButton').addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.categoryCheckbox');
+        const selectedCategories = [];
+        checkboxes.forEach(function(checkbox) {
+            if (checkbox.checked) {
+                selectedCategories.push(checkbox.value);
+            }
+        });
+
+        if (selectedCategories.length === 0) {
+            alert('Please select at least one category.');
+            return;
+        }
+
+        // Filter flashcards based on selected categories
+        selectedFlashcards = allFlashcards.filter(function(card) {
+            return selectedCategories.includes(card.Category);
+        });
+
+        // If no flashcards are selected, show an alert
+        if (selectedFlashcards.length === 0) {
+            alert('No flashcards available for the selected categories.');
+            return;
+        }
+
+        // Shuffle the selected flashcards
+        shuffleArray(selectedFlashcards);
+
+        // Hide category selection and show flashcards
+        document.getElementById('categorySelection').style.display = 'none';
+        document.getElementById('timerToggle').style.display = 'block';
+        document.getElementById('progressBar').style.display = 'block';
+        document.getElementById('card').style.display = 'block';
+        document.getElementById('showAnswerButton').style.display = 'inline-block';
+        document.getElementById('progress').style.display = 'block';
+        document.getElementById('homeButton').style.display = 'block';
+
+        // Reset variables
+        currentIndex = 0;
+        incorrectCards = [];
+        reviewingIncorrect = false;
+
+        showQuestion();
+    });
+
+    // Timer functionality
+    document.getElementById('enableTimer').addEventListener('change', function() {
+        timerEnabled = this.checked;
+        if (timerEnabled) {
+            startTimer();
+            document.getElementById('timer').style.display = 'block';
+        } else {
+            stopTimer();
+            document.getElementById('timer').style.display = 'none';
+        }
+    });
+
+    function startTimer() {
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+        document.getElementById('timer').textContent = 'Time: 00:00';
+    }
+
+    function updateTimer() {
+        let elapsed = Date.now() - startTime;
+        let seconds = Math.floor(elapsed / 1000) % 60;
+        let minutes = Math.floor(elapsed / (1000 * 60));
+        let formattedTime = `Time: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        document.getElementById('timer').textContent = formattedTime;
+    }
+
+    function updateProgressBar() {
+        let progressPercentage = ((currentIndex + 1) / selectedFlashcards.length) * 100;
+        document.getElementById('progressBarFill').style.width = progressPercentage + '%';
+    }
+
+    function showQuestion() {
+        const card = selectedFlashcards[currentIndex];
+        document.getElementById('question').textContent = card.Question;
+        document.getElementById('answer').style.display = 'none';
+        document.getElementById('answer').textContent = card.Answer;
+        document.getElementById('showAnswerButton').style.display = 'inline-block';
+        document.getElementById('hideAnswerButton').style.display = 'none';
+        document.getElementById('correctButton').style.display = 'none';
+        document.getElementById('incorrectButton').style.display = 'none';
+        document.getElementById('nextButton').style.display = 'none';
+        document.getElementById('prevButton').style.display = currentIndex > 0 ? 'inline-block' : 'none';
+        document.getElementById('progress').textContent = `Question ${currentIndex + 1} of ${selectedFlashcards.length}`;
+        document.getElementById('result').textContent = '';
+        updateProgressBar();
+    }
+
+    function showAnswer() {
+        document.getElementById('answer').style.display = 'block';
+        document.getElementById('showAnswerButton').style.display = 'none';
+        document.getElementById('hideAnswerButton').style.display = 'inline-block';
+        document.getElementById('correctButton').style.display = 'inline-block';
+        document.getElementById('incorrectButton').style.display = 'inline-block';
+    }
+
+    function hideAnswer() {
+        document.getElementById('answer').style.display = 'none';
+        document.getElementById('hideAnswerButton').style.display = 'none';
+        document.getElementById('showAnswerButton').style.display = 'inline-block';
+        document.getElementById('correctButton').style.display = 'none';
+        document.getElementById('incorrectButton').style.display = 'none';
+    }
+
+    function markCorrect() {
+        document.getElementById('correctButton').style.display = 'none';
+        document.getElementById('incorrectButton').style.display = 'none';
+        document.getElementById('nextButton').style.display = 'inline-block';
+    }
+
+    function markIncorrect() {
+        incorrectCards.push(selectedFlashcards[currentIndex]);
+        document.getElementById('correctButton').style.display = 'none';
+        document.getElementById('incorrectButton').style.display = 'none';
+        document.getElementById('nextButton').style.display = 'inline-block';
+    }
+
+    function nextQuestion() {
+        if (currentIndex < selectedFlashcards.length - 1) {
+            currentIndex++;
+            showQuestion();
+        } else {
+            // End of questions
+            document.getElementById('card').style.display = 'none';
+            document.getElementById('showAnswerButton').style.display = 'none';
+            document.getElementById('prevButton').style.display = 'none';
+            document.getElementById('hideAnswerButton').style.display = 'none';
+            document.getElementById('correctButton').style.display = 'none';
+            document.getElementById('incorrectButton').style.display = 'none';
+            document.getElementById('nextButton').style.display = 'none';
+            document.getElementById('progress').style.display = 'none';
+            document.getElementById('timerToggle').style.display = 'none';
+            if (timerEnabled) {
+                stopTimer();
+            }
+
+            if (!reviewingIncorrect && incorrectCards.length === 0) {
+                document.getElementById('result').innerHTML = 'Congratulations! You have answered all questions correctly!<br><img src="https://media.tenor.com/iVC0JYsOYSoAAAAC/celebrate-happy.gif" alt="Congratulations!">';
+            } else if (!reviewingIncorrect && incorrectCards.length > 0) {
+                document.getElementById('result').textContent = 'You have some incorrect answers.';
+                document.getElementById('reviewButton').style.display = 'inline-block';
+            } else {
+                document.getElementById('result').textContent = 'You have completed all questions!';
+            }
+            document.getElementById('restartButton').style.display = 'inline-block';
+        }
+    }
+
+    function prevQuestion() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            showQuestion();
+        }
+    }
+
+    function restart() {
+        // Return to category selection
+        document.getElementById('categorySelection').style.display = 'block';
+        document.getElementById('timerToggle').style.display = 'none';
+        document.getElementById('progressBar').style.display = 'none';
+        document.getElementById('card').style.display = 'none';
+        document.getElementById('prevButton').style.display = 'none';
+        document.getElementById('showAnswerButton').style.display = 'none';
+        document.getElementById('hideAnswerButton').style.display = 'none';
+        document.getElementById('correctButton').style.display = 'none';
+        document.getElementById('incorrectButton').style.display = 'none';
+        document.getElementById('nextButton').style.display = 'none';
+        document.getElementById('restartButton').style.display = 'none';
+        document.getElementById('reviewButton').style.display = 'none';
+        document.getElementById('progress').style.display = 'none';
+        document.getElementById('result').textContent = '';
+        document.getElementById('timer').style.display = 'none';
+        document.getElementById('enableTimer').checked = false;
+        document.getElementById('homeButton').style.display = 'none';
+        timerEnabled = false;
+        if (timerInterval) {
+            stopTimer();
+        }
+    }
+
+    function reviewIncorrect() {
+        if (incorrectCards.length > 0) {
+            selectedFlashcards = incorrectCards.slice();
+            currentIndex = 0;
+            incorrectCards = [];
+            reviewingIncorrect = true;
+            document.getElementById('card').style.display = 'block';
+            document.getElementById('reviewButton').style.display = 'none';
+            document.getElementById('restartButton').style.display = 'none';
+            document.getElementById('progress').style.display = 'block';
+            document.getElementById('result').textContent = '';
+            document.getElementById('timerToggle').style.display = 'block';
+            if (timerEnabled) {
+                stopTimer();
+                startTimer();
+            }
+            showQuestion();
+        }
+    }
+
+    document.getElementById('showAnswerButton').addEventListener('click', showAnswer);
+    document.getElementById('hideAnswerButton').addEventListener('click', hideAnswer);
+    document.getElementById('correctButton').addEventListener('click', markCorrect);
+    document.getElementById('incorrectButton').addEventListener('click', markIncorrect);
+    document.getElementById('nextButton').addEventListener('click', nextQuestion);
+    document.getElementById('prevButton').addEventListener('click', prevQuestion);
+    document.getElementById('restartButton').addEventListener('click', restart);
+    document.getElementById('reviewButton').addEventListener('click', reviewIncorrect);
+
+    // Home button functionality
+    document.getElementById('homeButton').addEventListener('click', function() {
+        restart();
+    });
+
+    // No questions start until Start is clicked
+</script>
+
+</body>
+</html>
